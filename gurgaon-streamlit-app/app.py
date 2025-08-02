@@ -197,10 +197,7 @@ def load_model():
 df, geojson_data = load_data()
 model = load_model()
 
-if model:
-    st.success("Model loaded successfully!")
-    # ... rest of your app code ...
-else:
+if not model:
     st.error("Model could not be loaded. App cannot proceed.")
 
 # --- Sidebar ---
