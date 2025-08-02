@@ -107,20 +107,56 @@ def load_css():
 load_css()
 
 # --- Load Data and Model ---
+# @st.cache_data
+# def load_data():
+#     try:
+#         df = pd.read_parquet(r'C:\Users\aryan\Desktop\Capstone Project\Data Preprocessing New\gurgaon_properties_final_df.parquet')
+#         # df = df[df['Furnishing'] != 'Under Construction']
+#     except FileNotFoundError:
+#         st.error(r"Error: Data file ('C:\Users\aryan\Desktop\Capstone Project\Data Preprocessing New\gurgaon_properties_final_df.parquet') not found.")
+#         st.stop()
+#     try:
+#         with open('map.geojson', 'r') as f:
+#             geojson_data = json.load(f)
+#     except FileNotFoundError:
+#         st.error("Error: GeoJSON file ('map.geojson') not found.")
+#         st.stop()
+#     return df, geojson_data
+
+
+# --- Configuration for the remote Parquet file ---
+PARQUET_URL = "https://github.com/iamaryan07/Capstone-Project-Real-Estate/releases/download/v1.0/gurgaon_properties_final_df.parquet"
+PARQUET_PATH = Path("gurgaon_properties_final_df.parquet")
+
 @st.cache_data
 def load_data():
+    # --- Part 1: Download and Load the Parquet File ---
+    if not PARQUET_PATH.exists():
+        with st.spinner("Downloading dataset... this may take a moment."):
+            try:
+                r = requests.get(PARQUET_URL)
+                r.raise_for_status() # This will raise an error for bad status codes
+                with open(PARQUET_PATH, 'wb') as f:
+                    f.write(r.content)
+            except requests.exceptions.RequestException as e:
+                st.error(f"Error downloading data file: {e}")
+                st.stop()
+
     try:
-        df = pd.read_parquet(r'C:\Users\aryan\Desktop\Capstone Project\Data Preprocessing New\gurgaon_properties_final_df.parquet')
-        # df = df[df['Furnishing'] != 'Under Construction']
-    except FileNotFoundError:
-        st.error(r"Error: Data file ('C:\Users\aryan\Desktop\Capstone Project\Data Preprocessing New\gurgaon_properties_final_df.parquet') not found.")
+        df = pd.read_parquet(PARQUET_PATH)
+    except Exception as e:
+        st.error(f"Error loading Parquet file: {e}")
         st.stop()
+
+    # --- Part 2: Load the Local GeoJSON File ---
+    # This part assumes 'map.geojson' is in your GitHub repository.
     try:
         with open('map.geojson', 'r') as f:
             geojson_data = json.load(f)
     except FileNotFoundError:
-        st.error("Error: GeoJSON file ('map.geojson') not found.")
+        st.error("Error: GeoJSON file ('map.geojson') not found. Make sure it's in your GitHub repository.")
         st.stop()
+
     return df, geojson_data
 
 
@@ -678,10 +714,34 @@ def recommendation_page():
 """, unsafe_allow_html=True)
 
 
+    # --- Configuration for the remote CSV file ---
+    REC_DATA_URL = "https://github.com/iamaryan07/Capstone-Project-Real-Estate/releases/download/v1.0/data_recommendation_v2.csv"
+    REC_DATA_PATH = Path("data_recommendation_v2.csv")
+
+    # --- Reusable download function ---
+    def download_file(url, path, message):
+        if not path.exists():
+            with st.spinner(message):
+                try:
+                    r = requests.get(url)
+                    r.raise_for_status()
+                    with open(path, 'wb') as f:
+                        f.write(r.content)
+                except Exception as e:
+                    st.error(f"Error downloading {path.name}: {e}")
+                    return False
+        return True
+
     @st.cache_resource
     def setup_recommenders():
         # Load property data
-        df_rec = pd.read_csv(r"C:\Users\aryan\OneDrive\Desktop\Capstone Project\Data Preprocessing New\data_recommendation_v2.csv")
+        # Part 1: Download the CSV file from the Release
+        if not download_file(REC_DATA_URL, REC_DATA_PATH, "Downloading recommendation data..."):
+            st.error("Could not download recommendation data. Recommender system unavailable.")
+            st.stop()
+    
+        df_rec = pd.read_csv(REC_DATA_PATH)
+        
         df_rec.drop(columns='Unnamed: 0', inplace=True)
         df_rec.dropna(subset=['NearbyPlaces'], inplace=True)
         df_rec['NearbyPlaces'] = df_rec['NearbyPlaces'].apply(ast.literal_eval)

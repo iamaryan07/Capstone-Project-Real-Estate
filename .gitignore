@@ -3,3 +3,10 @@
 
 # Ignore all model files
 *.pkl
+
+# Ignore entire folders relative to the project root
+/Data Preprocessing/
+/Data Preprocessing New/
+
+# Ignore a specific file in the project root
+/99acres_backup.csv
