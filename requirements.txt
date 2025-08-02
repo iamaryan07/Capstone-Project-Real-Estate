@@ -1,5 +1,8 @@
 streamlit
 pandas
-scikit-learn
-joblib
+numpy
 requests
+joblib
+plotly
+geopy
+scikit-learn
