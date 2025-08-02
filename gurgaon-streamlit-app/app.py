@@ -185,10 +185,12 @@ def load_model():
                 st.error(f"Error downloading model: {e}")
                 return None
     
+    # Load the model FROM THE DOWNLOADED PATH
     try:
-        model = joblib.load(r'C:\Users\aryan\Desktop\Capstone Project\Joblib\property_price_model.pkl')
+        # This is the corrected line
+        model = joblib.load(MODEL_PATH)
     except FileNotFoundError:
-        st.error("Error: Saved model file ('property_price_model.pkl') not found.")
+        st.error(f"Error: Saved model file ('{MODEL_PATH}') not found.")
         model = None
     return model
 
