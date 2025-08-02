@@ -758,20 +758,6 @@ def recommendation_page():
         GEO_CACHE_OLD_URL = "https://github.com/iamaryan07/Capstone-Project-Real-Estate/releases/download/v1.0/geo_cache_old.pkl"
         GEO_CACHE_OLD_PATH = Path("geo_cache_old.pkl")
 
-        # --- Reusable download function (if you don't have it elsewhere) ---
-        def download_file(url, path, message):
-            if not path.exists():
-                with st.spinner(message):
-                    try:
-                        r = requests.get(url)
-                        r.raise_for_status()
-                        with open(path, 'wb') as f:
-                            f.write(r.content)
-                    except Exception as e:
-                        st.error(f"Error downloading {path.name}: {e}")
-                        return False
-            return True
-
         # --- Download and Load both caches ---
         geo_cache = None
         geo_cache_old = None
