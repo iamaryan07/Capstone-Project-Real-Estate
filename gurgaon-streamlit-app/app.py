@@ -1,6 +1,8 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
+import requests
+from pathlib import Path
 import joblib
 import plotly.express as px
 import plotly.graph_objects as go
@@ -121,8 +123,29 @@ def load_data():
         st.stop()
     return df, geojson_data
 
+
+MODEL_PATH = Path("property_price_model.pkl")
+MODEL_URL = "https://github.com/iamaryan07/Capstone-Project-Real-Estate/releases/download/v1.0/property_price_model.pkl"
+
 @st.cache_resource
 def load_model():
+    """
+    Downloads the model from a URL if it doesn't exist,
+    then loads and returns the model.
+    """
+    # Download the model if it's not already here
+    if not MODEL_PATH.exists():
+        with st.spinner("Downloading model... This may take a moment."):
+            try:
+                r = requests.get(MODEL_URL)
+                r.raise_for_status()  # Raise an exception for bad status codes
+                with open(MODEL_PATH, 'wb') as f:
+                    f.write(r.content)
+                st.success("Model downloaded!")
+            except requests.exceptions.RequestException as e:
+                st.error(f"Error downloading model: {e}")
+                return None
+    
     try:
         model = joblib.load(r'C:\Users\aryan\Desktop\Capstone Project\Joblib\property_price_model.pkl')
     except FileNotFoundError:
@@ -132,6 +155,12 @@ def load_model():
 
 df, geojson_data = load_data()
 model = load_model()
+
+if model:
+    st.success("Model loaded successfully!")
+    # ... rest of your app code ...
+else:
+    st.error("Model could not be loaded. App cannot proceed.")
 
 # --- Sidebar ---
 st.sidebar.title("Gurgaon Flat Finder")
@@ -870,9 +899,7 @@ def recommendation_page():
                     
 
 
-def insights_page():
-    df = pd.read_parquet(r'C:\Users\aryan\Desktop\Capstone Project\Data Preprocessing New\gurgaon_properties_final_df.parquet')
-    pipeline = joblib.load('property_price_model.pkl')
+def insights_page(model):
     st.title("What-If Analysis")
     st.markdown("Simulate how a change in a single property feature affects its estimated price.")
 
@@ -1008,4 +1035,4 @@ elif page == "Analytics Dashboard":
 elif page == 'Recommend Society':
     recommendation_page()
 elif page == 'Insights':
-    insights_page()
+    insights_page(model)
