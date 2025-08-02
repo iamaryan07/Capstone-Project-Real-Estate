@@ -1,0 +1,5 @@
+# Ignore installer scripts
+*.sh
+
+# Ignore all model files
+*.pkl
