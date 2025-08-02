@@ -149,9 +149,12 @@ def load_data():
         st.stop()
 
     # --- Part 2: Load the Local GeoJSON File ---
-    # This part assumes 'map.geojson' is in your GitHub repository.
     try:
-        with open('map.geojson', 'r') as f:
+        # Build a full, reliable path to the geojson file
+        script_dir = Path(__file__).parent
+        geojson_path = script_dir / "map.geojson"
+
+        with open(geojson_path, 'r') as f:
             geojson_data = json.load(f)
     except FileNotFoundError:
         st.error("Error: GeoJSON file ('map.geojson') not found. Make sure it's in your GitHub repository.")
