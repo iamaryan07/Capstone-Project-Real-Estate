@@ -751,12 +751,44 @@ def recommendation_page():
         df_rec.dropna(subset=['NearbyPlaces'], inplace=True)
         df_rec['NearbyPlaces'] = df_rec['NearbyPlaces'].apply(ast.literal_eval)
 
-        # Load both caches
-        with open(r"C:\Users\aryan\Desktop\Capstone Project\Joblib\geo_cache.pkl", "rb") as f:
-            geo_cache = joblib.load(f)
+        # --- Configuration for your cache files ---
+        GEO_CACHE_URL = "https://github.com/iamaryan07/Capstone-Project-Real-Estate/releases/download/v1.0/geo_cache.pkl"
+        GEO_CACHE_PATH = Path("geo_cache.pkl")
 
-        with open(r"C:\Users\aryan\Desktop\Capstone Project\Joblib\geo_cache_old.pkl", "rb") as f:
-            geo_cache_old = joblib.load(f)
+        GEO_CACHE_OLD_URL = "https://github.com/iamaryan07/Capstone-Project-Real-Estate/releases/download/v1.0/geo_cache_old.pkl"
+        GEO_CACHE_OLD_PATH = Path("geo_cache_old.pkl")
+
+        # --- Reusable download function (if you don't have it elsewhere) ---
+        def download_file(url, path, message):
+            if not path.exists():
+                with st.spinner(message):
+                    try:
+                        r = requests.get(url)
+                        r.raise_for_status()
+                        with open(path, 'wb') as f:
+                            f.write(r.content)
+                    except Exception as e:
+                        st.error(f"Error downloading {path.name}: {e}")
+                        return False
+            return True
+
+        # --- Download and Load both caches ---
+        geo_cache = None
+        geo_cache_old = None
+
+        # Load the first cache file
+        if download_file(GEO_CACHE_URL, GEO_CACHE_PATH, "Downloading geo cache..."):
+            try:
+                geo_cache = joblib.load(GEO_CACHE_PATH)
+            except Exception as e:
+                st.error(f"Error loading geo_cache.pkl: {e}")
+
+        # Load the second cache file
+        if download_file(GEO_CACHE_OLD_URL, GEO_CACHE_OLD_PATH, "Downloading old geo cache..."):
+            try:
+                geo_cache_old = joblib.load(GEO_CACHE_OLD_PATH)
+            except Exception as e:
+                st.error(f"Error loading geo_cache_old.pkl: {e}")
 
         # Add coordinates to df_rec from geo_cache_old
         df_rec['Geo_Key'] = df_rec['Property Name'].str.strip().str.lower() + ', ' + df_rec['Sector'].str.strip().str.lower() + ', gurgaon'
